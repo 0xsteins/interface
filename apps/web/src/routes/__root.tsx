@@ -1,6 +1,17 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "sonner"
 import { ThemeProvider } from "../ui/theme-provider"
 import appCss from "@workspace/ui/globals.css?url"
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 30,      // 30s — prices refresh frequently
+      refetchOnWindowFocus: true,
+    },
+  },
+})
 
 // Update this to your production domain before going live.
 const SITE_URL = "https://so4.market"
@@ -154,7 +165,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            {children}
+            <Toaster richColors position="bottom-right" />
+          </ThemeProvider>
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>

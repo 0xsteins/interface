@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import "../styles/landing.css"
 
-import { Nav } from "../ui/landing/nav"
+import { Navbar } from "../ui/Navbar"
 import { Hero } from "../ui/landing/hero"
 import { Stats } from "../ui/landing/stats"
 import { Features } from "../ui/landing/features"
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({ component: LandingPage })
 function LandingPage() {
   return (
     <div className="font-trading min-h-svh bg-background text-foreground antialiased">
-      <Nav />
+      <Navbar variant="landing" />
       <Hero />
       <Stats />
       <Features />
