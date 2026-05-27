@@ -1,4 +1,5 @@
-import { useState, type ComponentProps } from "react"
+import { useEffect, useMemo, useState, type ComponentProps } from "react"
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk"
 import { FREIGHTER_ID } from "@creit.tech/stellar-wallets-kit/modules/freighter.module"
 import { HANA_ID } from "@creit.tech/stellar-wallets-kit/modules/hana.module"
 import { XBULL_ID } from "@creit.tech/stellar-wallets-kit/modules/xbull.module"
@@ -104,6 +105,50 @@ function WalletModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const [availableWalletIds, setAvailableWalletIds] = useState<Set<string>>(
+    () => new Set(),
+  )
+
+  useEffect(() => {
+    if (!open) return
+
+    let cancelled = false
+
+    StellarWalletsKit.refreshSupportedWallets()
+      .then((wallets) => {
+        if (cancelled) return
+
+        setAvailableWalletIds(
+          new Set(
+            wallets
+              .filter((wallet) => wallet.isAvailable)
+              .map((wallet) => wallet.id),
+          ),
+        )
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailableWalletIds(new Set())
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  const sortedWalletOptions = useMemo(
+    () =>
+      [...WALLET_OPTIONS].sort((a, b) => {
+        const aAvailable = availableWalletIds.has(a.id)
+        const bAvailable = availableWalletIds.has(b.id)
+
+        if (aAvailable === bAvailable) return 0
+        return aAvailable ? -1 : 1
+      }),
+    [availableWalletIds],
+  )
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
