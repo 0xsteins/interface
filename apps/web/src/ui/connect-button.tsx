@@ -90,9 +90,18 @@ export function ConnectButton() {
 
   if (status === "connecting") {
     return (
-      <Button disabled variant="outline" className="h-9.5 px-4 text-[13.5px]">
-        <span className="mr-2 inline-block size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        Connecting
+      <Button
+        disabled
+        variant="outline"
+        className="h-9.5 px-4 text-[13.5px]"
+        aria-live="polite"
+        aria-label="Connecting wallet"
+      >
+        <span
+          className="mr-2 inline-block size-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+          aria-hidden="true"
+        />
+        <span role="status">Connecting</span>
       </Button>
     )
   }
