@@ -7,6 +7,7 @@ import {
   buildCancelOrderTransaction,
   buildSwapOrderTransaction,
   buildBatchOrderTransaction,
+  buildClaimFundingFeesTransaction,
 } from "@/lib/contracts/exchange-router-client"
 import { prepareAndSign } from "@/lib/soroban/tx-builder"
 import { parseSorobanError } from "@/lib/soroban/errors"
@@ -60,8 +61,8 @@ function isValidAccount(account: string): boolean {
 
 async function invalidateTradeQueries(account: string): Promise<void> {
   await Promise.all([
-    queryClient.invalidateQueries({ queryKey: queryKeys.positions(CHAIN_ID, account) }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.orders(CHAIN_ID, account) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.trade.positions(CHAIN_ID, account) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.trade.orders(CHAIN_ID, account) }),
   ])
 }
 
@@ -103,7 +104,7 @@ export async function createDecreaseOrder(params: DecreaseOrderParams): Promise<
       successMessage: "Position closed successfully",
       successDescription: (hash) => `Tx: ${hash.slice(0, 8)}...`,
       onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: queryKeys.positions(CHAIN_ID, params.account) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.trade.positions(CHAIN_ID, params.account) }),
       onError: parseSorobanError,
     },
   )
@@ -132,7 +133,7 @@ export async function createSwapOrder(params: SwapOrderParams): Promise<string> 
         `${params.amountIn} ${params.fromToken} -> ${params.minAmountOut} ${params.toToken} | Tx: ${hash.slice(0, 8)}...`,
       onSuccess: () =>
         queryClient.invalidateQueries({
-          queryKey: queryKeys.tokenBalances(CHAIN_ID, params.account),
+          queryKey: queryKeys.trade.tokenBalances(CHAIN_ID, params.account),
         }),
       onError: parseSorobanError,
     },
@@ -153,15 +154,33 @@ export async function cancelOrder(account: string, orderKey: OrderKey): Promise<
       loadingMessage: "Cancelling order...",
       successMessage: "Order cancelled",
       successDescription: (hash) => `Tx: ${hash.slice(0, 8)}...`,
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.orders(CHAIN_ID, account) }),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.trade.orders(CHAIN_ID, account) }),
       onError: parseSorobanError,
     },
   )
 }
 
-export async function claimFundingFees(_account: string, marketAddresses: Array<string>): Promise<string> {
-  await fakeTxDelay(1000)
-  return `Funding fees claimed for ${marketAddresses.length} market(s)`
+export async function claimFundingFees(account: string, marketAddresses: Array<string>): Promise<string> {
+  if (!isValidAccount(account)) {
+    throw new Error("Connect your wallet before claiming funding fees.")
+  }
+
+  return submitTx(
+    async () => {
+      const tx = await buildClaimFundingFeesTransaction(account, marketAddresses)
+      return prepareAndSign(tx, walletKit, NETWORK.networkPassphrase)
+    },
+    {
+      loadingMessage: `Claiming funding fees for ${marketAddresses.length} market(s)...`,
+      successMessage: "Funding fees claimed",
+      successDescription: (hash) => `${marketAddresses.length} market(s) | Tx: ${hash.slice(0, 8)}...`,
+      onSuccess: (hash) => {
+        void invalidateTradeQueries(account)
+        window.open(explorerTxUrl(hash), "_blank", "noopener,noreferrer")
+      },
+      onError: parseSorobanError,
+    },
+  )
 }
 
 export type BatchOrderParams = {

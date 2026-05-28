@@ -45,8 +45,8 @@ async function fetchFundingRate(marketAddress: string): Promise<FundingRateInfo>
 
 export function useFundingRate(marketAddress: string = DEFAULT_MARKET_ADDRESS) {
   return useQuery<FundingRateInfo>({
-    queryKey: queryKeys.fundingRate(CHAIN_ID, marketAddress),
-    queryFn: () => fetchFundingRate(marketAddress),
+    queryKey: queryKeys.trade.fundingRate("stellar-mainnet"),
+    queryFn: fetchFundingRate,
     staleTime: 60_000,
     refetchInterval: 60_000,
   })
