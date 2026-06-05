@@ -6,7 +6,6 @@ import { parseSorobanError } from "@/lib/soroban/errors"
 import { queryKeys } from "@/shared/lib/query-keys"
 import { submitTx } from "@/shared/hooks/useTxSubmit"
 import { walletKit } from "@/features/wallet/lib/wallet-kit"
-import { sorobanRpc } from "@/lib/soroban/client"
 import { Client as GlvRouterClient } from "@/lib/contracts/generated/glv-router/src"
 import type {
   CreateDepositParams as GeneratedCreateDepositParams,
@@ -16,11 +15,21 @@ import type {
 
 const CHAIN_ID = "stellar-mainnet"
 
-const glvClient = new GlvRouterClient({
-  contractId: CONTRACTS.glvRouter,
-  networkPassphrase: NETWORK.networkPassphrase,
-  rpcUrl: import.meta.env.VITE_RPC_URL,
-})
+let glvClient: GlvRouterClient | null = null
+
+function getGlvClient(): GlvRouterClient {
+  if (!CONTRACTS.glvRouter) {
+    throw new Error("GLV router is not deployed on this network.")
+  }
+
+  glvClient ??= new GlvRouterClient({
+    contractId: CONTRACTS.glvRouter,
+    networkPassphrase: NETWORK.networkPassphrase,
+    rpcUrl: import.meta.env.VITE_RPC_URL,
+  })
+
+  return glvClient
+}
 
 export type CreateDepositParams = GeneratedCreateDepositParams
 export type CreateWithdrawalParams = GeneratedCreateWithdrawalParams
@@ -36,7 +45,7 @@ export async function createDeposit(params: CreateDepositParams): Promise<string
 
   return submitTx(
     async () => {
-      const tx = await glvClient.createDeposit(params)
+      const tx = await getGlvClient().createDeposit(params)
       return prepareAndSign(tx, walletKit, NETWORK.networkPassphrase)
     },
     {
@@ -60,7 +69,7 @@ export async function createWithdrawal(params: CreateWithdrawalParams): Promise<
 
   return submitTx(
     async () => {
-      const tx = await glvClient.createWithdrawal(params)
+      const tx = await getGlvClient().createWithdrawal(params)
       return prepareAndSign(tx, walletKit, NETWORK.networkPassphrase)
     },
     {
@@ -78,5 +87,5 @@ export async function createWithdrawal(params: CreateWithdrawalParams): Promise<
 }
 
 export async function getGlvInfo(glvAddress: string): Promise<GlvInfo> {
-  return glvClient.getGlvInfo(glvAddress)
+  return getGlvClient().getGlvInfo(glvAddress)
 }
