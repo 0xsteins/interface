@@ -7,8 +7,8 @@ import { queryKeys } from "@/shared/lib/query-keys"
 import { submitTx } from "@/shared/hooks/useTxSubmit"
 import { walletKit } from "@/features/wallet/lib/wallet-kit"
 import { sorobanRpc } from "@/lib/soroban/client"
-import {
-  Client as GlvRouterClient,
+import { Client as GlvRouterClient } from "@/lib/contracts/generated/glv-router/src"
+import type {
   CreateDepositParams as GeneratedCreateDepositParams,
   CreateWithdrawalParams as GeneratedCreateWithdrawalParams,
   GlvInfo,

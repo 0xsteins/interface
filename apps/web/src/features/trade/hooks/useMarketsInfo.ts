@@ -23,6 +23,10 @@ const USD_DECIMALS = 30
 const SECONDS_PER_HOUR = 3600n
 const FACTOR_PRECISION = 10n ** 30n
 
+function isSorobanAddress(addr: string): boolean {
+  return /^C[A-Z2-7]{55}$/.test(addr)
+}
+
 async function fetchMarketsInfo(markets: Array<Market>): Promise<Array<MarketInfo>> {
   if (markets.length === 0) return []
 
@@ -30,11 +34,18 @@ async function fetchMarketsInfo(markets: Array<Market>): Promise<Array<MarketInf
 
   const results = await Promise.allSettled(
     markets.map(async (m): Promise<MarketInfo> => {
-      const [oi, funding, pool] = await Promise.allSettled([
-        reader.getOpenInterest(m.address),
-        reader.getFundingInfo(m.address),
-        reader.getMarketPoolValueInfo(m.address, false),
-      ])
+      // Skip on-chain calls for markets that still have placeholder addresses
+      const [oi, funding, pool] = isSorobanAddress(m.address)
+        ? await Promise.allSettled([
+            reader.getOpenInterest(m.address),
+            reader.getFundingInfo(m.address),
+            reader.getMarketPoolValueInfo(m.address, false),
+          ])
+        : [
+            { status: "rejected" as const, reason: "placeholder address" },
+            { status: "rejected" as const, reason: "placeholder address" },
+            { status: "rejected" as const, reason: "placeholder address" },
+          ]
 
       const oiData  = oi.status      === "fulfilled" ? oi.value      : null
       const fundingData = funding.status === "fulfilled" ? funding.value : null

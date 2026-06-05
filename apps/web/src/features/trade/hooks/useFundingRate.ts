@@ -35,11 +35,17 @@ async function fetchFundingRate(marketAddress: string): Promise<FundingRateInfo>
   return { ratePerHour, nextEpochTs: computeNextEpoch() }
 }
 
+// Market token addresses in the MARKETS data may be placeholders (e.g. "BTC-BTC-USDC")
+// until real Soroban contract addresses are configured. Guard all on-chain calls.
+function isSorobanAddress(addr: string): boolean {
+  return /^C[A-Z2-7]{55}$/.test(addr)
+}
+
 export function useFundingRate(marketAddress: string = DEFAULT_MARKET_ADDRESS) {
   return useQuery<FundingRateInfo>({
     queryKey: queryKeys.trade.fundingRate(CHAIN_ID, marketAddress),
     queryFn: () => fetchFundingRate(marketAddress),
-    enabled: marketAddress !== DEFAULT_MARKET_ADDRESS,
+    enabled: marketAddress !== DEFAULT_MARKET_ADDRESS && isSorobanAddress(marketAddress),
     staleTime: 60_000,
     refetchInterval: 60_000,
   })
