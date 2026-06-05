@@ -34,6 +34,16 @@ export default defineConfig(({ mode }) => {
       tanstackStart(),
       viteReact(),
     ],
+    // stellar-wallets-kit is ESM but its Freighter module imports named exports
+    // from @stellar/freighter-api which ships as CJS. Node's native ESM loader
+    // can't always destructure CJS named exports, so we force Vite/Rollup to
+    // bundle these packages instead of letting Node load them raw in SSR.
+    ssr: {
+      noExternal: [
+        "@creit.tech/stellar-wallets-kit",
+        "@stellar/freighter-api",
+      ],
+    },
     test: {
       environment: "jsdom",
       globals: true,
