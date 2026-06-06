@@ -88,7 +88,13 @@ export function GmPoolRow({ market, variant }: GmPoolRowProps) {
           </p>
         ) : null}
         <div className="mt-4">
-          <PoolActions hasWallet={!!address && isConnected} hasUserGm={hasUserGm} />
+          <PoolActions
+            hasWallet={!!address && isConnected}
+            hasUserGm={hasUserGm}
+            account={address}
+            market={market}
+            userGmBalance={userGmBalance}
+          />
         </div>
       </article>
     )
@@ -121,7 +127,13 @@ export function GmPoolRow({ market, variant }: GmPoolRowProps) {
         {formatToken(Number(formatSorobanAmount(userGmBalance, 7, 4)), "GM", { decimals: 4 })}
       </td>
       <td className="px-5 py-4 text-right">
-        <PoolActions hasWallet={!!address && isConnected} hasUserGm={hasUserGm} />
+        <PoolActions
+          hasWallet={!!address && isConnected}
+          hasUserGm={hasUserGm}
+          account={address}
+          market={market}
+          userGmBalance={userGmBalance}
+        />
         {hasFailures ? (
           <p className="mt-2 text-right text-[11px] text-yellow-600 dark:text-yellow-400">
             Partial data
