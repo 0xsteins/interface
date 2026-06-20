@@ -117,7 +117,7 @@ export function GmPoolsTable({ markets }: GmPoolsTableProps) {
             <col className="w-[11%]" />
             <col className="w-[14%]" />
           </colgroup>
-          <thead className="sticky top-14 z-10 bg-card/95 backdrop-blur">
+          <thead className="sticky top-0 z-10 bg-card/95 backdrop-blur">
             <tr className="border-b border-border text-[11px] uppercase text-muted-foreground">
               <th className="px-5 py-3 font-medium">Pool</th>
               <th className="px-2 py-3 text-right font-medium">
